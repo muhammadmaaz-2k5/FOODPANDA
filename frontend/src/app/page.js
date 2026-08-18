@@ -124,16 +124,25 @@ export default function Home() {
             {banners.map((banner) => (
               <div
                 key={banner.id}
-                className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500 to-rose-500 p-6 text-white shadow-md flex items-center justify-between"
+                className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500 via-rose-500 to-[#d70f64] p-6 sm:p-7 text-white shadow-lg flex items-center justify-between group cursor-pointer border border-white/10 hover:shadow-xl transition-all duration-300"
               >
-                <div className="space-y-1.5">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase bg-white/25 px-2 py-0.5 rounded-md">
-                    <Tag className="w-3 h-3" /> Special Deal
+                {banner.imageUrl && (
+                  <img
+                    src={banner.imageUrl}
+                    alt={banner.title}
+                    className="absolute inset-0 w-full h-full object-cover opacity-25 group-hover:scale-105 group-hover:opacity-35 transition-all duration-500 pointer-events-none"
+                  />
+                )}
+                <div className="relative z-10 space-y-1.5 max-w-[75%]">
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full shadow-xs">
+                    <Tag className="w-3 h-3 text-amber-200" /> {banner.placement || 'Featured Promo'}
                   </span>
-                  <h3 className="text-xl font-black">{banner.title}</h3>
-                  <p className="text-xs text-amber-50 font-medium">{banner.subtitle || 'Limited time offer on orders'}</p>
+                  <h3 className="text-xl sm:text-2xl font-black tracking-tight drop-shadow-xs">{banner.title}</h3>
+                  <p className="text-xs text-amber-100 font-medium line-clamp-1">{banner.subtitle || 'Tap to explore special restaurant offers and promo discounts'}</p>
                 </div>
-                <div className="text-4xl font-extrabold opacity-90">🎉</div>
+                <div className="relative z-10 text-3xl sm:text-4xl font-extrabold opacity-95 group-hover:rotate-12 transition-transform duration-300">
+                  🎉
+                </div>
               </div>
             ))}
           </div>
