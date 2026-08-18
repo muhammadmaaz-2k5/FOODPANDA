@@ -22,8 +22,9 @@ export default function VendorSettingsPage() {
     const fetchSettings = async () => {
       try {
         const res = await api.get('/restaurants');
-        if (res.data.success && res.data.data?.length > 0) {
-          const rest = res.data.data[0];
+        const list = res.data?.data?.items || res.data?.data || [];
+        if (list.length > 0) {
+          const rest = list[0];
           setRestaurant(rest);
           setName(rest.name || '');
           setDescription(rest.description || '');

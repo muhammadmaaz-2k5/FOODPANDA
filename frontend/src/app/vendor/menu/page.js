@@ -25,15 +25,31 @@ export default function VendorMenuPage() {
   const fetchVendorMenu = async () => {
     try {
       const restRes = await api.get('/restaurants');
-      if (restRes.data.success && restRes.data.data?.length > 0) {
-        const myRest = restRes.data.data[0];
+      const restaurantList = restRes.data?.data?.items || restRes.data?.data || [];
+      if (restaurantList.length > 0) {
+        const myRest = restaurantList[0];
         setRestaurant(myRest);
         const catRes = await api.get(`/menu/restaurants/${myRest.id}/categories`);
-        if (catRes.data.success) {
-          setCategories(catRes.data.data);
-          if (catRes.data.data.length > 0 && !categoryId) {
-            setCategoryId(catRes.data.data[0].id);
+        let catList = catRes.data?.data || [];
+
+        // If restaurant has no food categories yet, create default categories
+        if (catList.length === 0) {
+          try {
+            await api.post('/menu/categories', {
+              name: 'Signature Dishes',
+              description: 'Main chef specials & house recommendations',
+              restaurantId: myRest.id,
+            });
+            const refreshedCats = await api.get(`/menu/restaurants/${myRest.id}/categories`);
+            catList = refreshedCats.data?.data || [];
+          } catch (e) {
+            console.error('Auto create category error:', e.message);
           }
+        }
+
+        setCategories(catList);
+        if (catList.length > 0) {
+          setCategoryId(catList[0].id);
         }
       }
     } catch (err) {
