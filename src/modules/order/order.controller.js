@@ -270,7 +270,10 @@ const checkout = async (req, res, next) => {
     // Real-time notification through Socket.io if initialized
     if (global.io) {
       global.io.to(`restaurant_${restaurantId}`).emit('new_order', order);
+      global.io.to(`restaurant_${restaurantId}`).emit('new_order_placed', order);
       global.io.to(`user_${req.user.id}`).emit('order_created', order);
+      global.io.emit('new_order_placed', order);
+      global.io.emit('order_status_changed', { orderId: order.id, status: order.status });
     }
 
     return successResponse(res, 'Order placed successfully', order, 201);

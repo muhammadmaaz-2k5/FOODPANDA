@@ -258,8 +258,27 @@ const acceptAssignment = async (req, res, next) => {
       },
     });
 
+    // Create or find Customer <-> Rider chat conversation
+    try {
+      await prisma.conversation.create({
+        data: {
+          orderId,
+          type: 'CUSTOMER_RIDER',
+          status: 'OPEN',
+          participants: {
+            create: [
+              { userId: order.userId, role: 'CUSTOMER' },
+              { userId: req.user.id, role: 'RIDER' },
+            ],
+          },
+        },
+      });
+    } catch (e) {
+      console.log('Conversation already exists or created:', e.message);
+    }
+
     if (global.io) {
-      global.io.to(`order_${orderId}`).emit('rider_assigned', {
+      const riderPayload = {
         orderId,
         rider: {
           id: rider.id,
@@ -269,7 +288,11 @@ const acceptAssignment = async (req, res, next) => {
           vehiclePlate: rider.vehiclePlate,
           rating: rider.rating,
         },
-      });
+      };
+
+      global.io.to(`order_${orderId}`).emit('rider_assigned', riderPayload);
+      global.io.emit('rider_assigned', riderPayload);
+      global.io.emit('order_status_changed', { orderId, status: order.status, rider: riderPayload.rider });
     }
 
     return successResponse(res, 'Delivery assignment accepted', assignment);

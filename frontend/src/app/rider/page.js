@@ -77,6 +77,29 @@ export default function RiderDashboard() {
     fetchRiderData();
   }, []);
 
+  // Real-time socket sync for new orders & assignments
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('new_order_placed', () => {
+      fetchRiderData();
+    });
+
+    socket.on('order_status_changed', () => {
+      fetchRiderData();
+    });
+
+    socket.on('rider_assigned', () => {
+      fetchRiderData();
+    });
+
+    return () => {
+      socket.off('new_order_placed');
+      socket.off('order_status_changed');
+      socket.off('rider_assigned');
+    };
+  }, [socket]);
+
   // Continuous GPS Broadcaster when Enroute
   useEffect(() => {
     if (activeJob && activeJob.status === 'ENROUTE') {

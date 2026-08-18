@@ -49,20 +49,33 @@ export default function OrderTrackingPage() {
     if (!socket) return;
 
     socket.on('order_status_changed', (data) => {
-      if (data.orderId === id) {
+      if (data.orderId === id || !data.orderId) {
         fetchOrder();
       }
     });
 
-    socket.on('rider_location_updated', (data) => {
-      if (data.orderId === id) {
-        setRiderLocation({ lat: data.latitude, lng: data.longitude });
+    socket.on('rider_assigned', (data) => {
+      if (data.orderId === id || !data.orderId) {
+        fetchOrder();
       }
     });
 
+    const handleLocationUpdate = (data) => {
+      if (data.orderId === id || !data.orderId) {
+        setRiderLocation({ lat: data.latitude, lng: data.longitude });
+      }
+    };
+
+    socket.on('rider_location_updated', handleLocationUpdate);
+    socket.on('rider_location_update', handleLocationUpdate);
+    socket.on('rider_live_stream', handleLocationUpdate);
+
     return () => {
       socket.off('order_status_changed');
-      socket.off('rider_location_updated');
+      socket.off('rider_assigned');
+      socket.off('rider_location_updated', handleLocationUpdate);
+      socket.off('rider_location_update', handleLocationUpdate);
+      socket.off('rider_live_stream', handleLocationUpdate);
     };
   }, [socket, id]);
 
@@ -159,15 +172,21 @@ export default function OrderTrackingPage() {
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
           <h3 className="text-base font-black text-slate-900 border-b border-slate-100 pb-3">Items Ordered</h3>
           <div className="space-y-3">
-            {order.items?.map((item) => (
-              <div key={item.id} className="flex justify-between items-center text-sm">
-                <div>
-                  <span className="font-bold text-slate-800">{item.quantity}x {item.foodItem?.name}</span>
-                  {item.variation && <p className="text-xs text-slate-400">Size: {item.variation.name}</p>}
+            {order.items?.map((item) => {
+              const itemTitle = item.name || item.foodItem?.name || 'Dish Item';
+              const itemTotal = item.totalPrice ?? ((item.unitPrice ?? item.price ?? 0) * (item.quantity || 1));
+              return (
+                <div key={item.id} className="flex justify-between items-center text-sm">
+                  <div>
+                    <span className="font-bold text-slate-800">{item.quantity}x {itemTitle}</span>
+                    {(item.variationName || item.variation?.name) && (
+                      <p className="text-xs text-slate-400">Size: {item.variationName || item.variation?.name}</p>
+                    )}
+                  </div>
+                  <span className="font-bold text-slate-900">${Number(itemTotal).toFixed(2)}</span>
                 </div>
-                <span className="font-bold text-slate-900">${(item.price * item.quantity).toFixed(2)}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </main>

@@ -176,10 +176,10 @@ export default function OrdersPage() {
                     </div>
                     <h3 className="font-bold text-base text-slate-900">{order.restaurant?.name}</h3>
                     <p className="text-xs text-slate-400">
-                      {order.items?.map((i) => `${i.quantity}x ${i.foodItem?.name}`).join(', ')}
+                      {order.items?.map((i) => `${i.quantity}x ${i.name || i.foodItem?.name || 'Dish Item'}`).join(', ')}
                     </p>
                     <p className="text-xs font-bold text-slate-700 pt-1">
-                      Total: <span className="text-[#d70f64]">${order.total.toFixed(2)}</span> • {new Date(order.createdAt).toLocaleDateString()}
+                      Total: <span className="text-[#d70f64]">${(Number(order.total) || 0).toFixed(2)}</span> • {new Date(order.createdAt).toLocaleDateString()}
                     </p>
                   </div>
 
