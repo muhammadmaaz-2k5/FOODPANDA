@@ -166,8 +166,8 @@ export default function RestaurantPage() {
                   </div>
 
                   <div className="w-24 h-24 rounded-xl bg-rose-50 flex items-center justify-center text-3xl shrink-0 overflow-hidden relative">
-                    {item.image ? (
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    {(item.imageUrl || item.image) ? (
+                      <img src={item.imageUrl || item.image} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
                       '🍔'
                     )}
@@ -186,17 +186,34 @@ export default function RestaurantPage() {
       {selectedItem && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            {(selectedItem.imageUrl || selectedItem.image) && (
+              <div className="h-48 w-full relative">
+                <img
+                  src={selectedItem.imageUrl || selectedItem.image}
+                  alt={selectedItem.name}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  onClick={() => setSelectedItem(null)}
+                  className="absolute top-4 right-4 bg-black/50 backdrop-blur-xs text-white p-2 rounded-full hover:bg-black/70 transition"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-black text-slate-900">{selectedItem.name}</h3>
                 <p className="text-xs text-slate-500 mt-0.5">{selectedItem.description}</p>
               </div>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700"
-              >
-                ✕
-              </button>
+              {!(selectedItem.imageUrl || selectedItem.image) && (
+                <button
+                  onClick={() => setSelectedItem(null)}
+                  className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700"
+                >
+                  ✕
+                </button>
+              )}
             </div>
 
             <div className="p-6 max-h-[60vh] overflow-y-auto space-y-6">

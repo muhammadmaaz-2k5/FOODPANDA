@@ -22,14 +22,18 @@ export default function AdminPromotionsPage() {
   // New Banner Form
   const [bannerTitle, setBannerTitle] = useState('');
   const [bannerSubtitle, setBannerSubtitle] = useState('');
+  const [bannerImage, setBannerImage] = useState('');
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
 
   const fetchPromotions = async () => {
     try {
-      const [bannerRes] = await Promise.all([
+      const [bannerRes, couponRes] = await Promise.all([
         api.get('/marketing/banners'),
+        api.get('/marketing/coupons').catch(() => ({ data: { success: true, data: [] } })),
       ]);
-      if (bannerRes.data.success) setBanners(bannerRes.data.data);
+      if (bannerRes.data?.success) setBanners(bannerRes.data.data || []);
+      if (couponRes.data?.success) setCoupons(couponRes.data.data || []);
     } catch (err) {
       console.error('Error fetching promotions:', err.message);
     } finally {
@@ -40,6 +44,32 @@ export default function AdminPromotionsPage() {
   useEffect(() => {
     fetchPromotions();
   }, []);
+
+  const handleBannerImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingBanner(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'vendor-food');
+
+    try {
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dlrbonrhc';
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.secure_url) {
+        setBannerImage(data.secure_url);
+      }
+    } catch (err) {
+      alert('Banner image upload failed: ' + err.message);
+    } finally {
+      setUploadingBanner(false);
+    }
+  };
 
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
@@ -61,12 +91,24 @@ export default function AdminPromotionsPage() {
         setIsCouponModalOpen(false);
         setCode('');
         setValue('');
-        alert('Coupon created successfully!');
+        fetchPromotions();
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to create coupon');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteCoupon = async (couponId) => {
+    if (!confirm('Are you sure you want to delete this coupon?')) return;
+    try {
+      const res = await api.delete(`/marketing/coupons/${couponId}`);
+      if (res.data.success) {
+        fetchPromotions();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete coupon');
     }
   };
 
@@ -79,7 +121,7 @@ export default function AdminPromotionsPage() {
       const res = await api.post('/marketing/banners', {
         title: bannerTitle,
         subtitle: bannerSubtitle,
-        imageUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836',
+        imageUrl: bannerImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836',
         position: 'TOP',
         isActive: true,
       });
@@ -88,12 +130,25 @@ export default function AdminPromotionsPage() {
         setIsBannerModalOpen(false);
         setBannerTitle('');
         setBannerSubtitle('');
+        setBannerImage('');
         fetchPromotions();
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to create banner');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteBanner = async (bannerId) => {
+    if (!confirm('Are you sure you want to delete this banner?')) return;
+    try {
+      const res = await api.delete(`/marketing/banners/${bannerId}`);
+      if (res.data.success) {
+        fetchPromotions();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete banner');
     }
   };
 
@@ -125,40 +180,75 @@ export default function AdminPromotionsPage() {
         {/* Banners Grid */}
         <div className="space-y-4">
           <h2 className="text-lg font-black text-slate-900">Active Promotional Banners ({banners.length})</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {banners.map((b) => (
-              <div key={b.id} className="p-6 rounded-3xl bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-md flex justify-between items-center">
-                <div>
-                  <span className="text-[10px] font-extrabold uppercase bg-white/20 px-2 py-0.5 rounded">Storefront Hero</span>
-                  <h4 className="text-lg font-black mt-1">{b.title}</h4>
-                  <p className="text-xs text-amber-100">{b.subtitle}</p>
+          {banners.length === 0 ? (
+            <div className="p-8 rounded-3xl bg-slate-50 border border-slate-200 text-center text-slate-400 text-sm">
+              No promotional banners active. Click "+ Add Banner" to create one.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {banners.map((b) => (
+                <div
+                  key={b.id}
+                  className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-md p-6 flex justify-between items-center group"
+                >
+                  {b.imageUrl && (
+                    <img
+                      src={b.imageUrl}
+                      alt={b.title}
+                      className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:scale-105 transition-transform duration-300 pointer-events-none"
+                    />
+                  )}
+                  <div className="relative z-10 space-y-1">
+                    <span className="text-[10px] font-extrabold uppercase bg-white/25 px-2 py-0.5 rounded backdrop-blur-xs">
+                      {b.placement || 'Storefront Hero'}
+                    </span>
+                    <h4 className="text-lg font-black mt-1">{b.title}</h4>
+                    <p className="text-xs text-amber-100">{b.subtitle || 'Active Campaign'}</p>
+                  </div>
+                  <div className="relative z-10 flex items-center gap-3">
+                    <button
+                      onClick={() => handleDeleteBanner(b.id)}
+                      className="p-2 bg-white/20 hover:bg-rose-600 rounded-xl text-white backdrop-blur-xs transition cursor-pointer"
+                      title="Delete Banner"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="text-3xl">🎉</div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Coupons List Preset */}
+        {/* Coupons List */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 space-y-4">
-          <h2 className="text-lg font-black text-slate-900">Active Platform Coupons</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-1">
-              <span className="text-xs font-black text-[#d70f64]">WELCOME50</span>
-              <p className="text-sm font-bold text-slate-800">50% Off First Order</p>
-              <p className="text-[11px] text-slate-400">Min Order: $20.00 • Active</p>
+          <h2 className="text-lg font-black text-slate-900">Active Platform Coupons ({coupons.length})</h2>
+          {coupons.length === 0 ? (
+            <div className="p-6 rounded-2xl bg-slate-50 text-center text-slate-400 text-sm">
+              No custom coupons created yet.
             </div>
-            <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-1">
-              <span className="text-xs font-black text-[#d70f64]">FREEDELIVERY</span>
-              <p className="text-sm font-bold text-slate-800">Free Delivery</p>
-              <p className="text-[11px] text-slate-400">Min Order: $15.00 • Active</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {coupons.map((c) => (
+                <div key={c.id} className="p-4 rounded-2xl border border-slate-200 bg-slate-50 flex justify-between items-start">
+                  <div className="space-y-1">
+                    <span className="text-xs font-black text-[#d70f64]">{c.code}</span>
+                    <p className="text-sm font-bold text-slate-800">
+                      {c.type === 'PERCENTAGE' ? `${c.value}% Off` : c.type === 'FREE_DELIVERY' ? 'Free Delivery' : `$${c.value} Flat Off`}
+                    </p>
+                    <p className="text-[11px] text-slate-400">Min Order: ${c.minOrderValue?.toFixed(2)} • Active</p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteCoupon(c.id)}
+                    className="text-slate-400 hover:text-rose-600 p-1 transition cursor-pointer"
+                    title="Delete Coupon"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
             </div>
-            <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-1">
-              <span className="text-xs font-black text-[#d70f64]">FLAT10</span>
-              <p className="text-sm font-bold text-slate-800">$10.00 Flat Discount</p>
-              <p className="text-[11px] text-slate-400">Min Order: $30.00 • Active</p>
-            </div>
-          </div>
+          )}
         </div>
 
       {/* Create Coupon Modal */}
@@ -267,9 +357,24 @@ export default function AdminPromotionsPage() {
                 />
               </div>
 
+              {/* Cloudinary Banner Image Uploader */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700">Banner Background Image (Cloudinary)</label>
+                <div className="flex items-center gap-3">
+                  <label className="px-4 py-2 rounded-xl border border-dashed border-slate-300 hover:border-purple-600 bg-slate-50 text-xs font-semibold text-slate-700 flex items-center gap-2 cursor-pointer transition">
+                    <Megaphone className="w-4 h-4 text-purple-600" />
+                    {uploadingBanner ? 'Uploading...' : 'Upload Image'}
+                    <input type="file" accept="image/*" onChange={handleBannerImageUpload} className="hidden" />
+                  </label>
+                  {bannerImage && (
+                    <img src={bannerImage} alt="Preview" className="w-12 h-8 rounded-lg object-cover border border-slate-200" />
+                  )}
+                </div>
+              </div>
+
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || uploadingBanner}
                 className="w-full py-3 rounded-xl bg-purple-900 text-white font-bold text-xs shadow-md cursor-pointer disabled:opacity-50"
               >
                 {submitting ? 'Creating...' : 'Publish Banner'}

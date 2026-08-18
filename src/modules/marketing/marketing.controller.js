@@ -248,12 +248,40 @@ const createBanner = async (req, res, next) => {
   }
 };
 
+/**
+ * Delete Banner (Admin)
+ */
+const deleteBanner = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.banner.delete({ where: { id } });
+    return successResponse(res, 'Banner deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete Coupon (Admin / Vendor)
+ */
+const deleteCoupon = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.coupon.delete({ where: { id } });
+    return successResponse(res, 'Coupon deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   validateCoupon,
   getCoupons,
   createCoupon,
+  deleteCoupon,
   getPromotions,
   createPromotion,
   getBanners,
   createBanner,
+  deleteBanner,
 };

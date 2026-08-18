@@ -37,19 +37,23 @@ export default function DashboardLayout({
     CUSTOMER: [
       { label: 'Explore Food & Deals', href: '/', icon: Compass },
       { label: 'Order History & Tracking', href: '/orders', icon: ShoppingBag },
+      { label: 'My Account & Profile', href: '/profile', icon: User },
     ],
     VENDOR: [
       { label: 'Live Kitchen (KDS)', href: '/vendor', icon: ChefHat },
       { label: 'Menu & Dish Builder', href: '/vendor/menu', icon: UtensilsCrossed },
       { label: 'Kitchen & Delivery Hours', href: '/vendor/settings', icon: Settings },
+      { label: 'Vendor Profile', href: '/profile', icon: User },
     ],
     RIDER: [
       { label: 'Dispatch & Available Jobs', href: '/rider', icon: Bike },
+      { label: 'Rider Profile & Photo', href: '/profile', icon: User },
     ],
     ADMIN: [
       { label: 'Partners & User Moderation', href: '/admin', icon: ShieldCheck },
       { label: 'Live City Dispatch Map', href: '/admin/dispatch', icon: Map },
       { label: 'Campaigns, Coupons & Banners', href: '/admin/promotions', icon: Megaphone },
+      { label: 'Admin Profile', href: '/profile', icon: User },
     ],
   };
 
