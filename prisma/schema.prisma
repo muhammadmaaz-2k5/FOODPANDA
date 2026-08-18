@@ -333,6 +333,7 @@ model FoodItem {
   description   String?
   price         Float
   discountedPrice Float?
+  imageUrl      String?
   status        FoodItemStatus @default(AVAILABLE)
   rating        Float          @default(0)
   ratingCount   Int            @default(0)
