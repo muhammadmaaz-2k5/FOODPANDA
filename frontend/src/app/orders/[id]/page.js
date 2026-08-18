@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import LiveMap from '@/components/LiveMap';
+import ChatWidget from '@/components/ChatWidget';
 import { useSocket } from '@/context/SocketContext';
 import api from '@/lib/api';
 import { CheckCircle2, Clock, ChefHat, Bike, PackageCheck, MapPin, Phone } from 'lucide-react';
@@ -21,6 +23,7 @@ export default function OrderTrackingPage() {
   const { socket, joinOrderRoom } = useSocket();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [riderLocation, setRiderLocation] = useState(null);
 
   const fetchOrder = async () => {
     try {
@@ -51,8 +54,15 @@ export default function OrderTrackingPage() {
       }
     });
 
+    socket.on('rider_location_updated', (data) => {
+      if (data.orderId === id) {
+        setRiderLocation({ lat: data.latitude, lng: data.longitude });
+      }
+    });
+
     return () => {
       socket.off('order_status_changed');
+      socket.off('rider_location_updated');
     };
   }, [socket, id]);
 
@@ -92,6 +102,21 @@ export default function OrderTrackingPage() {
             <p className="text-xs text-slate-400 mt-0.5">{order.paymentMethod} • {order.paymentStatus}</p>
           </div>
         </div>
+
+        {/* Interactive Mapbox Map */}
+        <LiveMap
+          restaurantLocation={{
+            lat: 14.5995,
+            lng: 120.9842,
+            name: order.restaurant?.name || 'Restaurant Spot',
+          }}
+          customerLocation={{
+            lat: order.deliveryLatitude || 14.6050,
+            lng: order.deliveryLongitude || 120.9900,
+            name: order.deliveryAddress?.line1 || 'Delivery Spot',
+          }}
+          riderLocation={riderLocation}
+        />
 
         {/* Real-Time Stepper Progress */}
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
@@ -146,6 +171,9 @@ export default function OrderTrackingPage() {
           </div>
         </div>
       </main>
+
+      {/* Floating In-App Chat */}
+      <ChatWidget orderId={id} restaurantName={order.restaurant?.name} />
     </div>
   );
 }
