@@ -28,6 +28,7 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^5.19.1",
+    "@supabase/supabase-js": "^2.112.3",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.5.0",
     "cors": "^2.8.5",

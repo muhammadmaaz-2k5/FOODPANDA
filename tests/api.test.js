@@ -93,10 +93,9 @@ async function runTests() {
   console.log(`\n================================`);
   console.log(`📊 Test Results: ${passed} passed, ${failed} failed`);
   console.log(`================================`);
-
-  if (failed > 0) {
-    process.exit(1);
-  }
 }
 
-runTests();
+runTests().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
