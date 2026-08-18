@@ -5,10 +5,21 @@ import Navbar from '@/components/Navbar';
 import CartDrawer from '@/components/CartDrawer';
 import Link from 'next/link';
 import api from '@/lib/api';
-import { Search, Star, Clock, Flame, Tag, ChevronRight } from 'lucide-react';
+import { Search, Star, Clock, Flame, Tag, ChevronRight, SlidersHorizontal, Sparkles } from 'lucide-react';
+
+const CUISINES = [
+  { label: 'All Cuisines', value: 'ALL', icon: '🍽️' },
+  { label: 'Burgers & Grill', value: 'BURGER', icon: '🍔' },
+  { label: 'Pizza & Italian', value: 'PIZZA', icon: '🍕' },
+  { label: 'Asian & Noodles', value: 'ASIAN', icon: '🍜' },
+  { label: 'Desserts & Sweets', value: 'DESSERT', icon: '🍩' },
+  { label: 'Beverages & Coffee', value: 'DRINKS', icon: '🥤' },
+];
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCuisine, setSelectedCuisine] = useState('ALL');
+  const [selectedSort, setSelectedSort] = useState('RATING'); // 'RATING', 'FASTEST', 'PRICE'
   const [restaurants, setRestaurants] = useState([]);
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,10 +44,21 @@ export default function Home() {
     loadHomeData();
   }, []);
 
-  const filteredRestaurants = restaurants.filter((r) =>
-    r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  let filteredRestaurants = restaurants.filter((r) => {
+    const matchQuery = r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchCuisine = selectedCuisine === 'ALL' ||
+      r.cuisineType?.toUpperCase().includes(selectedCuisine) ||
+      r.name.toUpperCase().includes(selectedCuisine) ||
+      r.description?.toUpperCase().includes(selectedCuisine);
+    return matchQuery && matchCuisine;
+  });
+
+  if (selectedSort === 'RATING') {
+    filteredRestaurants.sort((a, b) => (b.rating || 4.5) - (a.rating || 4.5));
+  } else if (selectedSort === 'FASTEST') {
+    filteredRestaurants.sort((a, b) => (a.deliveryTimeMin || 25) - (b.deliveryTimeMin || 25));
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -44,16 +66,16 @@ export default function Home() {
       <CartDrawer />
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#d70f64] to-[#9c0b49] text-white py-16 px-4 sm:px-6 lg:px-8">
+      <section className="relative bg-gradient-to-br from-[#d70f64] via-[#b50b52] to-[#800739] text-white py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-semibold backdrop-blur-xs tracking-wide">
-            <Flame className="w-4 h-4 text-amber-300" /> Craving something special?
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/20 text-xs font-bold backdrop-blur-xs tracking-wide shadow-xs">
+            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" /> Fastest Food & Grocery Delivery
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight">
-            Order food & groceries from the best spots near you
+            Order food & groceries from top spots in your city
           </h1>
-          <p className="text-lg text-rose-100 max-w-2xl mx-auto">
-            Super fast delivery from your favorite local eateries and verified partners.
+          <p className="text-base sm:text-lg text-rose-100 max-w-2xl mx-auto">
+            Super fast delivery from your favorite local eateries and verified restaurant partners.
           </p>
 
           {/* Search Bar */}
@@ -65,9 +87,9 @@ export default function Home() {
                 placeholder="Search for restaurants, burgers, pizza, or Asian cuisine..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-hidden text-base"
+                className="w-full px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-hidden text-sm sm:text-base"
               />
-              <button className="foodpanda-btn px-6 py-3 rounded-xl font-bold text-sm shrink-0">
+              <button className="foodpanda-btn px-6 py-3 rounded-xl font-bold text-xs sm:text-sm shrink-0">
                 Find Food
               </button>
             </div>
@@ -75,21 +97,41 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Cuisine Quick-Filter Chips */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
+        <div className="bg-white p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-lg flex gap-2 overflow-x-auto scrollbar-none">
+          {CUISINES.map((c) => (
+            <button
+              key={c.value}
+              onClick={() => setSelectedCuisine(c.value)}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs shrink-0 flex items-center gap-2 transition cursor-pointer ${
+                selectedCuisine === c.value
+                  ? 'bg-[#d70f64] text-white shadow-md'
+                  : 'bg-slate-100/80 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <span>{c.icon}</span>
+              <span>{c.label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
       {/* Promotional Banners */}
       {banners.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {banners.map((banner) => (
               <div
                 key={banner.id}
-                className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 p-6 text-white shadow-md flex items-center justify-between"
+                className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500 to-rose-500 p-6 text-white shadow-md flex items-center justify-between"
               >
-                <div className="space-y-1">
-                  <span className="inline-flex items-center gap-1 text-xs font-bold uppercase bg-white/20 px-2 py-0.5 rounded">
+                <div className="space-y-1.5">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase bg-white/25 px-2 py-0.5 rounded-md">
                     <Tag className="w-3 h-3" /> Special Deal
                   </span>
                   <h3 className="text-xl font-black">{banner.title}</h3>
-                  <p className="text-xs text-amber-50">{banner.subtitle || 'Limited time offer on orders'}</p>
+                  <p className="text-xs text-amber-50 font-medium">{banner.subtitle || 'Limited time offer on orders'}</p>
                 </div>
                 <div className="text-4xl font-extrabold opacity-90">🎉</div>
               </div>
@@ -99,24 +141,42 @@ export default function Home() {
       )}
 
       {/* Restaurant List Section */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1 w-full">
-        <div className="flex items-center justify-between mb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 w-full space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Featured Restaurants</h2>
-            <p className="text-sm text-slate-500 mt-1">Handpicked quality dining delivering directly to your door.</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Featured Restaurants</h2>
+            <p className="text-xs text-slate-500 mt-1">Handpicked quality dining delivering directly to your door.</p>
+          </div>
+
+          {/* Sort Filter Selector */}
+          <div className="flex items-center gap-2 text-xs font-bold bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-slate-500">Sort by:</span>
+            <button
+              onClick={() => setSelectedSort('RATING')}
+              className={`px-2 py-1 rounded-lg ${selectedSort === 'RATING' ? 'bg-[#d70f64] text-white' : 'text-slate-700'}`}
+            >
+              Top Rated
+            </button>
+            <button
+              onClick={() => setSelectedSort('FASTEST')}
+              className={`px-2 py-1 rounded-lg ${selectedSort === 'FASTEST' ? 'bg-[#d70f64] text-white' : 'text-slate-700'}`}
+            >
+              Fastest
+            </button>
           </div>
         </div>
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="h-72 rounded-2xl bg-slate-200 animate-pulse" />
+              <div key={n} className="h-72 rounded-3xl bg-slate-200 animate-pulse" />
             ))}
           </div>
         ) : filteredRestaurants.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+          <div className="text-center py-16 bg-white rounded-3xl border border-slate-200">
             <p className="text-lg font-bold text-slate-700">No restaurants found</p>
-            <p className="text-sm text-slate-400 mt-1">Try searching with different keywords.</p>
+            <p className="text-xs text-slate-400 mt-1">Try clearing your filters or search keywords.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -124,10 +184,10 @@ export default function Home() {
               <Link
                 key={res.id}
                 href={`/restaurant/${res.id}`}
-                className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col"
+                className="group bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col"
               >
                 {/* Restaurant Cover Image */}
-                <div className="h-44 w-full bg-slate-100 relative overflow-hidden">
+                <div className="h-48 w-full bg-slate-100 relative overflow-hidden">
                   {res.coverImage ? (
                     <img
                       src={res.coverImage}
@@ -153,7 +213,7 @@ export default function Home() {
                       {res.name}
                     </h3>
                     <p className="text-xs text-slate-500 line-clamp-2 mt-1">
-                      {res.description || 'Gourmet burgers, fries & refreshing shakes'}
+                      {res.description || 'Gourmet burgers, crispy fries & signature shakes'}
                     </p>
                   </div>
 
@@ -162,7 +222,7 @@ export default function Home() {
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
                       <span>{res.deliveryTimeMin || 25}-{res.deliveryTimeMax || 35} mins</span>
                     </div>
-                    <span className="text-[#d70f64] flex items-center gap-0.5 group-hover:translate-x-0.5 transition">
+                    <span className="text-[#d70f64] font-bold flex items-center gap-0.5 group-hover:translate-x-0.5 transition">
                       View Menu <ChevronRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
@@ -176,7 +236,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white py-8 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4">
-          <p>© {new Date().getFullYear()} FoodPanda. High-Performance Full Stack Food Delivery Platform.</p>
+          <p>© {new Date().getFullYear()} FoodPanda. Fast & Reliable Food Delivery Platform.</p>
         </div>
       </footer>
     </div>

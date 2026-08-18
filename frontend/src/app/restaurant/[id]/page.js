@@ -113,9 +113,25 @@ export default function RestaurantPage() {
               </div>
             </div>
 
-            <div className="px-5 py-3 rounded-2xl bg-rose-50 border border-rose-100 text-center">
-              <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">Free Delivery</span>
-              <p className="text-xs text-rose-900 font-medium mt-0.5">On orders above $20 with code WELCOME50</p>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    await api.post(`/reviews/restaurants/${id}/favorite`);
+                    alert('Saved to favorites!');
+                  } catch (err) {
+                    alert(err.response?.data?.message || 'Please log in to save favorites');
+                  }
+                }}
+                className="px-4 py-3 rounded-2xl bg-white border border-slate-200 hover:border-rose-300 text-xs font-bold text-slate-700 shadow-xs flex items-center gap-2 cursor-pointer transition hover:text-[#d70f64]"
+              >
+                ❤️ Save Favorite
+              </button>
+
+              <div className="px-5 py-3 rounded-2xl bg-rose-50 border border-rose-100 text-center">
+                <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">Free Delivery</span>
+                <p className="text-xs text-rose-900 font-medium mt-0.5">On orders above $20 with code WELCOME50</p>
+              </div>
             </div>
           </div>
         </div>
