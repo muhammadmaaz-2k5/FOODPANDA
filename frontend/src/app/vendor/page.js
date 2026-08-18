@@ -46,13 +46,13 @@ export default function VendorDashboard() {
   const fetchVendorData = async () => {
     try {
       const [ordersRes, analyticsRes] = await Promise.all([
-        api.get('/orders'),
-        api.get('/analytics/dashboard'),
+        api.get('/orders').catch(() => ({ data: { success: true, data: [] } })),
+        api.get('/analytics/dashboard').catch(() => ({ data: { success: true, data: null } })),
       ]);
-      if (ordersRes.data.success) setOrders(ordersRes.data.data || []);
-      if (analyticsRes.data.success) setStats(analyticsRes.data.data);
+      if (ordersRes.data?.success) setOrders(ordersRes.data.data || []);
+      if (analyticsRes.data?.success) setStats(analyticsRes.data.data);
     } catch (err) {
-      console.error('Vendor data fetch error:', err.message);
+      console.warn('Vendor data fetch notice:', err.message);
     } finally {
       setLoading(false);
     }
