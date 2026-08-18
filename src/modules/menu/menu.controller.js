@@ -11,6 +11,13 @@ const getCategories = async (req, res, next) => {
     const categories = await prisma.foodCategory.findMany({
       where: { restaurantId },
       include: {
+        foodItems: {
+          include: {
+            variations: true,
+            addons: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
         _count: { select: { foodItems: true } },
       },
       orderBy: { name: 'asc' },
