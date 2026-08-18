@@ -98,8 +98,8 @@ export default function Home() {
       </section>
 
       {/* Cuisine Quick-Filter Chips */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
-        <div className="bg-white p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-lg flex gap-2 overflow-x-auto scrollbar-none">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10 w-full">
+        <div className="bg-white p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-xl flex gap-2.5 overflow-x-auto scrollbar-none">
           {CUISINES.map((c) => (
             <button
               key={c.value}
@@ -107,7 +107,7 @@ export default function Home() {
               className={`px-4 py-2.5 rounded-xl font-bold text-xs shrink-0 flex items-center gap-2 transition cursor-pointer ${
                 selectedCuisine === c.value
                   ? 'bg-[#d70f64] text-white shadow-md'
-                  : 'bg-slate-100/80 text-slate-700 hover:bg-slate-200'
+                  : 'bg-slate-100/80 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
               }`}
             >
               <span>{c.icon}</span>
