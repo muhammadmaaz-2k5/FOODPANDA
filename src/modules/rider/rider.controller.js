@@ -222,6 +222,10 @@ const getAvailableDeliveries = async (req, res, next) => {
 const acceptAssignment = async (req, res, next) => {
   try {
     const { orderId } = req.body;
+    if (!orderId) {
+      return errorResponse(res, 'orderId is required', 400);
+    }
+
     const rider = await prisma.rider.findUnique({
       where: { userId: req.user.id },
     });

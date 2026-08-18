@@ -169,107 +169,104 @@ const checkout = async (req, res, next) => {
     // Create Order with Transaction
     const orderNumber = generateOrderNumber();
 
-    const order = await prisma.$transaction(async (tx) => {
-      // 1. Create order
-      const newOrder = await tx.order.create({
-        data: {
-          orderNumber,
-          userId: req.user.id,
-          restaurantId,
-          status: 'PENDING',
-          type,
-          deliveryTier,
-          subtotal,
-          deliveryFee,
-          discountAmount,
-          taxAmount,
-          total,
-          paymentStatus: paymentMethod === 'CASH' ? 'PENDING' : 'PAID',
-          paymentMethod,
-          deliveryAddressId: deliveryAddressId || null,
-          deliveryLatitude,
-          deliveryLongitude,
-          deliveryInstructions,
-          estimatedPrepTime: restaurant.deliveryTimeMin || 25,
-          estimatedDeliveryTime: (restaurant.deliveryTimeMin || 25) + 15,
-          items: {
-            create: orderItemsData,
+    // 1. Create order with nested relations
+    const order = await prisma.order.create({
+      data: {
+        orderNumber,
+        userId: req.user.id,
+        restaurantId,
+        status: 'PENDING',
+        type,
+        deliveryTier,
+        subtotal,
+        deliveryFee,
+        discountAmount,
+        taxAmount,
+        total,
+        paymentStatus: paymentMethod === 'CASH' ? 'PENDING' : 'PAID',
+        paymentMethod,
+        deliveryAddressId: deliveryAddressId || null,
+        deliveryLatitude,
+        deliveryLongitude,
+        deliveryInstructions,
+        estimatedPrepTime: restaurant.deliveryTimeMin || 25,
+        estimatedDeliveryTime: (restaurant.deliveryTimeMin || 25) + 15,
+        items: {
+          create: orderItemsData,
+        },
+        statusHistory: {
+          create: {
+            status: 'PENDING',
+            note: 'Order placed by customer',
+            createdBy: req.user.id,
           },
-          statusHistory: {
-            create: {
-              status: 'PENDING',
-              note: 'Order placed by customer',
-              createdBy: req.user.id,
-            },
+        },
+        payment: {
+          create: {
+            amount: total,
+            status: paymentMethod === 'CASH' ? 'PENDING' : 'PAID',
+            method: paymentMethod,
+            transactionId: `TXN-${Date.now()}`,
+            gateway: paymentMethod === 'CASH' ? 'CASH_ON_DELIVERY' : 'MOCK_STRIPE',
+            paidAt: paymentMethod === 'CASH' ? null : new Date(),
           },
-          payment: {
-            create: {
-              amount: total,
-              status: paymentMethod === 'CASH' ? 'PENDING' : 'PAID',
-              method: paymentMethod,
-              transactionId: `TXN-${Date.now()}`,
-              gateway: paymentMethod === 'CASH' ? 'CASH_ON_DELIVERY' : 'MOCK_STRIPE',
-              paidAt: paymentMethod === 'CASH' ? null : new Date(),
-            },
-          },
-          conversation: {
-            create: {
-              type: 'CUSTOMER_RESTAURANT',
-              status: 'OPEN',
-              participants: {
-                create: [
-                  { userId: req.user.id, role: 'CUSTOMER' },
-                  { userId: restaurant.ownerId, role: 'RESTAURANT' },
-                ],
-              },
+        },
+        conversation: {
+          create: {
+            type: 'CUSTOMER_RESTAURANT',
+            status: 'OPEN',
+            participants: {
+              create: [
+                { userId: req.user.id, role: 'CUSTOMER' },
+                { userId: restaurant.ownerId, role: 'RESTAURANT' },
+              ],
             },
           },
         },
-        include: {
-          items: true,
-          payment: true,
-          restaurant: { select: { id: true, name: true, phone: true } },
-          statusHistory: true,
-        },
-      });
-
-      // 2. Record coupon usage if applied
-      if (appliedCoupon && discountAmount > 0) {
-        await tx.couponUsage.create({
-          data: {
-            couponId: appliedCoupon.id,
-            userId: req.user.id,
-            orderId: newOrder.id,
-            discountAmount,
-          },
-        });
-        await tx.coupon.update({
-          where: { id: appliedCoupon.id },
-          data: { totalUsage: { increment: 1 } },
-        });
-      }
-
-      // 3. Mark cart as ORDERED
-      await tx.cart.update({
-        where: { id: cart.id },
-        data: { status: 'ORDERED' },
-      });
-
-      // 4. Update food item & restaurant order counts
-      await tx.restaurant.update({
-        where: { id: restaurantId },
-        data: { orderCount: { increment: 1 } },
-      });
-
-      for (const item of orderItemsData) {
-        await tx.foodItem.update({
-          where: { id: item.foodItemId },
-          data: { orderCount: { increment: item.quantity } },
-        });
-      }
-
-      return newOrder;
+      },
+      include: {
+        items: true,
+        payment: true,
+        restaurant: { select: { id: true, name: true, phone: true } },
+        statusHistory: true,
+      },
     });
+
+    // 2. Record coupon usage if applied
+    if (appliedCoupon && discountAmount > 0) {
+      await prisma.couponUsage.create({
+        data: {
+          couponId: appliedCoupon.id,
+          userId: req.user.id,
+          orderId: order.id,
+          discountAmount,
+        },
+      }).catch(err => console.error('Coupon usage log error:', err.message));
+
+      await prisma.coupon.update({
+        where: { id: appliedCoupon.id },
+        data: { totalUsage: { increment: 1 } },
+      }).catch(err => console.error('Coupon count increment error:', err.message));
+    }
+
+    // 3. Mark cart as ORDERED
+    await prisma.cart.update({
+      where: { id: cart.id },
+      data: { status: 'ORDERED' },
+    }).catch(err => console.error('Cart update error:', err.message));
+
+    // 4. Update food item & restaurant order counts
+    await prisma.restaurant.update({
+      where: { id: restaurantId },
+      data: { orderCount: { increment: 1 } },
+    }).catch(err => console.error('Restaurant count update error:', err.message));
+
+    for (const item of orderItemsData) {
+      await prisma.foodItem.update({
+        where: { id: item.foodItemId },
+        data: { orderCount: { increment: item.quantity } },
+      }).catch(err => console.error('FoodItem count update error:', err.message));
+    }
 
     // Real-time notification through Socket.io if initialized
     if (global.io) {
