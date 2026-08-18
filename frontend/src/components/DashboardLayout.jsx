@@ -35,31 +35,31 @@ export default function DashboardLayout({
   // Configuration of navigation links per role
   const roleNavItems = {
     CUSTOMER: [
-      { label: 'Explore Food', href: '/', icon: Compass },
-      { label: 'My Orders', href: '/orders', icon: ShoppingBag },
+      { label: 'Explore Food & Deals', href: '/', icon: Compass },
+      { label: 'Order History & Tracking', href: '/orders', icon: ShoppingBag },
     ],
     VENDOR: [
       { label: 'Live Kitchen (KDS)', href: '/vendor', icon: ChefHat },
-      { label: 'Menu & Dishes', href: '/vendor/menu', icon: UtensilsCrossed },
-      { label: 'Kitchen Settings', href: '/vendor/settings', icon: Settings },
+      { label: 'Menu & Dish Builder', href: '/vendor/menu', icon: UtensilsCrossed },
+      { label: 'Kitchen & Delivery Hours', href: '/vendor/settings', icon: Settings },
     ],
     RIDER: [
-      { label: 'Dispatch & Active Trip', href: '/rider', icon: Bike },
+      { label: 'Dispatch & Available Jobs', href: '/rider', icon: Bike },
     ],
     ADMIN: [
-      { label: 'Overview & Partners', href: '/admin', icon: ShieldCheck },
-      { label: 'Live Dispatch Map', href: '/admin/dispatch', icon: Map },
-      { label: 'Coupons & Banners', href: '/admin/promotions', icon: Megaphone },
+      { label: 'Partners & User Moderation', href: '/admin', icon: ShieldCheck },
+      { label: 'Live City Dispatch Map', href: '/admin/dispatch', icon: Map },
+      { label: 'Campaigns, Coupons & Banners', href: '/admin/promotions', icon: Megaphone },
     ],
   };
 
   const currentNav = roleNavItems[role] || roleNavItems.CUSTOMER;
 
   const roleMeta = {
-    CUSTOMER: { color: 'text-[#d70f64]', bg: 'bg-rose-50', badge: 'Customer Portal', icon: '🛍️' },
-    VENDOR: { color: 'text-amber-600', bg: 'bg-amber-50', badge: 'Partner Kitchen', icon: '👨‍🍳' },
-    RIDER: { color: 'text-emerald-600', bg: 'bg-emerald-50', badge: 'Rider Logistics', icon: '🛵' },
-    ADMIN: { color: 'text-purple-600', bg: 'bg-purple-50', badge: 'Platform Admin', icon: '👑' },
+    CUSTOMER: { color: 'text-[#d70f64]', bg: 'bg-rose-50', badge: 'Customer Workspace', icon: '🛍️' },
+    VENDOR: { color: 'text-amber-600', bg: 'bg-amber-50', badge: 'Kitchen Staff Workspace', icon: '👨‍🍳' },
+    RIDER: { color: 'text-emerald-600', bg: 'bg-emerald-50', badge: 'Rider Logistics Workspace', icon: '🛵' },
+    ADMIN: { color: 'text-purple-600', bg: 'bg-purple-50', badge: 'Executive Platform Admin', icon: '👑' },
   }[role] || { color: 'text-[#d70f64]', bg: 'bg-rose-50', badge: 'Portal', icon: '🐼' };
 
   return (
