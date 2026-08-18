@@ -58,6 +58,14 @@ export default function VendorDashboard() {
             </div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Kitchen Live Ticket Display</h1>
             <p className="text-xs text-slate-600 mt-1">Manage incoming tickets, prep times, and order handoffs in real time.</p>
+            <div className="pt-3">
+              <a
+                href="/vendor/menu"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-slate-900 font-bold text-xs shadow-xs hover:bg-slate-50 transition border border-amber-300"
+              >
+                🍕 Open Menu & Dish Builder
+              </a>
+            </div>
           </div>
 
           <div className="flex gap-4 text-center">
