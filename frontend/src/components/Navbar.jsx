@@ -266,12 +266,43 @@ export default function Navbar() {
                     </span>
                   </div>
 
+                  {/* Quick role dashboard link */}
+                  {hasRole('ADMIN') && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-purple-700 hover:bg-purple-50 font-bold"
+                    >
+                      <ShieldCheck className="w-4 h-4 text-purple-600" /> Admin Control Hub
+                    </Link>
+                  )}
+
+                  {(hasRole('RESTAURANT_OWNER') || hasRole('RESTAURANT_STAFF')) && (
+                    <Link
+                      href="/vendor"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-amber-700 hover:bg-amber-50 font-bold"
+                    >
+                      <ChefHat className="w-4 h-4 text-amber-600" /> Kitchen (KDS) Hub
+                    </Link>
+                  )}
+
+                  {hasRole('RIDER') && (
+                    <Link
+                      href="/rider"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-emerald-700 hover:bg-emerald-50 font-bold"
+                    >
+                      <Bike className="w-4 h-4 text-emerald-600" /> Rider Logistics Hub
+                    </Link>
+                  )}
+
                   <Link
                     href="/orders"
                     onClick={() => setIsProfileDropdownOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold"
                   >
-                    <ShoppingBag className="w-4 h-4 text-slate-400" /> Order History
+                    <ShoppingBag className="w-4 h-4 text-slate-400" /> My Orders & History
                   </Link>
 
                   <button
@@ -279,7 +310,7 @@ export default function Navbar() {
                       setIsProfileDropdownOpen(false);
                       logout();
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 font-bold cursor-pointer transition"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 font-bold cursor-pointer transition border-t border-slate-100 mt-1 pt-2"
                   >
                     <LogOut className="w-4 h-4" /> Sign Out
                   </button>

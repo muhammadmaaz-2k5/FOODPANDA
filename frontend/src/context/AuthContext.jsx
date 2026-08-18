@@ -67,7 +67,15 @@ export function AuthProvider({ children }) {
   };
 
   const hasRole = (roleName) => {
-    return user?.roles?.includes(roleName) || user?.role?.name === roleName;
+    if (!user) return false;
+    const target = (roleName || '').toUpperCase();
+    const userRole = (user.role?.name || user.roleName || user.role || '').toString().toUpperCase();
+    if (userRole === target) return true;
+    if (userRole === 'ADMIN' || userRole === 'SUPERADMIN' || userRole === 'SUPER_ADMIN') return true;
+    if (Array.isArray(user.roles)) {
+      return user.roles.some((r) => (typeof r === 'string' ? r : r.name || '').toUpperCase() === target);
+    }
+    return false;
   };
 
   return (
