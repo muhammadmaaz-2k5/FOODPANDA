@@ -4,12 +4,14 @@ const restaurantController = require('./restaurant.controller');
 const { authenticate, optionalAuthenticate } = require('../../middlewares/auth.middleware');
 const { requireRole } = require('../../middlewares/rbac.middleware');
 
-// Public listing and details
+// Public listing, details and categories
 router.get('/', optionalAuthenticate, restaurantController.getRestaurants);
+router.get('/categories', restaurantController.getRestaurantCategories);
 router.get('/delivery-zones', restaurantController.getDeliveryZones);
 router.get('/:id', optionalAuthenticate, restaurantController.getRestaurantById);
 
 // Restaurant creation & modification (Admin or Restaurant Owner)
+router.post('/categories', authenticate, requireRole('ADMIN'), restaurantController.createRestaurantCategory);
 router.post('/', authenticate, requireRole('ADMIN', 'RESTAURANT_OWNER'), restaurantController.createRestaurant);
 router.put('/:id', authenticate, requireRole('ADMIN', 'RESTAURANT_OWNER'), restaurantController.updateRestaurant);
 router.patch('/:id/status', authenticate, requireRole('ADMIN', 'RESTAURANT_OWNER'), restaurantController.updateRestaurantStatus);

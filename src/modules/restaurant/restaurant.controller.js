@@ -392,6 +392,37 @@ const createDeliveryZone = async (req, res, next) => {
   }
 };
 
+/**
+ * List Platform / Restaurant Cuisine Categories
+ */
+const getRestaurantCategories = async (req, res, next) => {
+  try {
+    const categories = await prisma.restaurantCategory.findMany({
+      orderBy: { name: 'asc' },
+    });
+    return successResponse(res, 'Restaurant categories retrieved', categories);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Create Platform / Restaurant Cuisine Category (Admin)
+ */
+const createRestaurantCategory = async (req, res, next) => {
+  try {
+    const { name, iconUrl } = req.body;
+    if (!name) return errorResponse(res, 'Category name is required', 400);
+
+    const category = await prisma.restaurantCategory.create({
+      data: { name, iconUrl },
+    });
+    return successResponse(res, 'Restaurant category created', category, 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getRestaurants,
   getRestaurantById,
@@ -403,4 +434,6 @@ module.exports = {
   removeStaff,
   getDeliveryZones,
   createDeliveryZone,
+  getRestaurantCategories,
+  createRestaurantCategory,
 };

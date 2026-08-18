@@ -182,91 +182,120 @@ async function main() {
   }
 
   // 10. Sample Restaurants
-  const restaurant1 = await prisma.restaurant.create({
-    data: {
-      name: 'Panda Burger Grill',
-      description: 'Juicy handcrafted burgers, crispy fries, and thick milkshakes.',
-      phone: '+1-555-BURGERS',
-      email: 'contact@pandaburger.com',
-      logoUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
-      coverUrl: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=1200',
-      status: 'ACTIVE',
-      rating: 4.8,
-      ratingCount: 128,
-      orderCount: 540,
-      deliveryTimeMin: 20,
-      deliveryTimeMax: 35,
-      priceRange: 2,
-      latitude: 14.5998,
-      longitude: 120.9845,
-      addressLine: '456 Gourmet Boulevard',
-      city: 'Metro City',
-      postalCode: '10001',
-      ownerId: vendor.id,
-      deliveryZoneId: deliveryZone.id,
-      categories: {
-        connect: [{ id: createdCategories[0].id }],
-      },
-    },
+  let restaurant1 = await prisma.restaurant.findFirst({
+    where: { name: 'Panda Burger Grill' },
   });
+
+  if (!restaurant1) {
+    restaurant1 = await prisma.restaurant.create({
+      data: {
+        name: 'Panda Burger Grill',
+        description: 'Juicy handcrafted burgers, crispy fries, and thick milkshakes.',
+        phone: '+1-555-BURGERS',
+        email: 'contact@pandaburger.com',
+        logoUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
+        coverUrl: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=1200',
+        status: 'ACTIVE',
+        rating: 4.8,
+        ratingCount: 128,
+        orderCount: 540,
+        deliveryTimeMin: 20,
+        deliveryTimeMax: 35,
+        priceRange: 2,
+        latitude: 14.5998,
+        longitude: 120.9845,
+        addressLine: '456 Gourmet Boulevard',
+        city: 'Metro City',
+        postalCode: '10001',
+        ownerId: vendor.id,
+        deliveryZoneId: deliveryZone.id,
+        categories: {
+          connect: [{ id: createdCategories[0].id }],
+        },
+      },
+    });
+  }
 
   // 11. Food Categories & Items for Restaurant 1
-  const burgerCat = await prisma.foodCategory.create({
-    data: { name: 'Signature Burgers', restaurantId: restaurant1.id },
+  let burgerCat = await prisma.foodCategory.findFirst({
+    where: { name: 'Signature Burgers', restaurantId: restaurant1.id },
   });
-  const sidesCat = await prisma.foodCategory.create({
-    data: { name: 'Sides & Drinks', restaurantId: restaurant1.id },
+  if (!burgerCat) {
+    burgerCat = await prisma.foodCategory.create({
+      data: { name: 'Signature Burgers', restaurantId: restaurant1.id },
+    });
+  }
+
+  let sidesCat = await prisma.foodCategory.findFirst({
+    where: { name: 'Sides & Drinks', restaurantId: restaurant1.id },
+  });
+  if (!sidesCat) {
+    sidesCat = await prisma.foodCategory.create({
+      data: { name: 'Sides & Drinks', restaurantId: restaurant1.id },
+    });
+  }
+
+  let burgerItem = await prisma.foodItem.findFirst({
+    where: { name: 'The Ultimate Truffle Burger', restaurantId: restaurant1.id },
   });
 
-  const burgerItem = await prisma.foodItem.create({
-    data: {
-      name: 'The Ultimate Truffle Burger',
-      description: 'Double Angus beef patty, aged cheddar, truffle aioli, and caramelized onions on a brioche bun.',
-      price: 14.99,
-      discountedPrice: 12.99,
-      status: 'AVAILABLE',
-      rating: 4.9,
-      ratingCount: 88,
-      orderCount: 310,
-      isPopular: true,
-      preparationTime: 15,
-      calories: 780,
-      restaurantId: restaurant1.id,
-      categoryId: burgerCat.id,
-      variations: {
-        create: [
-          { name: 'Single Patty', price: 10.99 },
-          { name: 'Double Patty', price: 12.99 },
-          { name: 'Triple Monster Patty', price: 15.99 },
-        ],
+  if (!burgerItem) {
+    burgerItem = await prisma.foodItem.create({
+      data: {
+        name: 'The Ultimate Truffle Burger',
+        description: 'Double Angus beef patty, aged cheddar, truffle aioli, and caramelized onions on a brioche bun.',
+        price: 14.99,
+        discountedPrice: 12.99,
+        status: 'AVAILABLE',
+        rating: 4.9,
+        ratingCount: 88,
+        orderCount: 310,
+        isPopular: true,
+        preparationTime: 15,
+        calories: 780,
+        restaurantId: restaurant1.id,
+        categoryId: burgerCat.id,
+        variations: {
+          create: [
+            { name: 'Single Patty', price: 10.99 },
+            { name: 'Double Patty', price: 12.99 },
+            { name: 'Triple Monster Patty', price: 15.99 },
+          ],
+        },
+        addons: {
+          create: [
+            { name: 'Extra Cheddar Cheese', price: 1.5 },
+            { name: 'Crispy Bacon Strips', price: 2.0 },
+            { name: 'Jalapenos', price: 0.75 },
+          ],
+        },
       },
-      addons: {
-        create: [
-          { name: 'Extra Cheddar Cheese', price: 1.5 },
-          { name: 'Crispy Bacon Strips', price: 2.0 },
-          { name: 'Jalapenos', price: 0.75 },
-        ],
-      },
-    },
+    });
+  }
+
+  let friesItem = await prisma.foodItem.findFirst({
+    where: { name: 'Truffle & Parmesan Loaded Fries', restaurantId: restaurant1.id },
   });
 
-  const friesItem = await prisma.foodItem.create({
-    data: {
-      name: 'Truffle & Parmesan Loaded Fries',
-      description: 'Golden crispy fries tossed in white truffle oil and topped with fresh shaved parmesan.',
-      price: 6.99,
-      status: 'AVAILABLE',
-      rating: 4.7,
-      ratingCount: 45,
-      orderCount: 190,
-      isVegetarian: true,
-      isPopular: true,
-      restaurantId: restaurant1.id,
-      categoryId: sidesCat.id,
-    },
-  });
+  if (!friesItem) {
+    friesItem = await prisma.foodItem.create({
+      data: {
+        name: 'Truffle & Parmesan Loaded Fries',
+        description: 'Golden crispy fries tossed in white truffle oil and topped with fresh shaved parmesan.',
+        price: 6.99,
+        status: 'AVAILABLE',
+        rating: 4.7,
+        ratingCount: 45,
+        orderCount: 190,
+        isPopular: true,
+        restaurantId: restaurant1.id,
+        categoryId: sidesCat.id,
+      },
+    });
+  }
 
   // 12. Populate Search Index
+  await prisma.searchIndex.deleteMany({ where: { restaurantId: restaurant1.id } });
   await prisma.searchIndex.createMany({
     data: [
       {
@@ -337,6 +366,7 @@ async function main() {
         maxUsagePerUser: 2,
       },
     ],
+    skipDuplicates: true,
   });
 
   // 14. Promotional Banners
@@ -361,6 +391,7 @@ async function main() {
         sortOrder: 2,
       },
     ],
+    skipDuplicates: true,
   });
 
   // 15. Platform Settings
@@ -372,6 +403,7 @@ async function main() {
       { key: 'tax_rate_percent', value: '5', category: 'financial', isPublic: true },
       { key: 'support_email', value: 'support@foodpanda.com', category: 'support', isPublic: true },
     ],
+    skipDuplicates: true,
   });
 
   console.log('🎉 Seeding successfully finished!');

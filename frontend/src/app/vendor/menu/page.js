@@ -13,6 +13,12 @@ export default function VendorMenuPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  // Category Management Form state
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatDescription, setNewCatDescription] = useState('');
+  const [submittingCat, setSubmittingCat] = useState(false);
+
   // Form state
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -90,6 +96,43 @@ export default function VendorMenuPage() {
     }
   };
 
+  const handleCreateCategory = async (e) => {
+    e.preventDefault();
+    if (!newCatName || !restaurant) return;
+
+    try {
+      setSubmittingCat(true);
+      const res = await api.post('/menu/categories', {
+        name: newCatName,
+        description: newCatDescription || undefined,
+        restaurantId: restaurant.id,
+      });
+
+      if (res.data.success) {
+        setIsCategoryModalOpen(false);
+        setNewCatName('');
+        setNewCatDescription('');
+        fetchVendorMenu();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to create category');
+    } finally {
+      setSubmittingCat(false);
+    }
+  };
+
+  const handleDeleteCategory = async (catId) => {
+    if (!confirm('Are you sure you want to delete this menu category?')) return;
+    try {
+      const res = await api.delete(`/menu/categories/${catId}`);
+      if (res.data.success) {
+        fetchVendorMenu();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete category');
+    }
+  };
+
   const handleCreateDish = async (e) => {
     e.preventDefault();
     if (!name || !price || !categoryId || !restaurant) return;
@@ -144,15 +187,23 @@ export default function VendorMenuPage() {
             <p className="text-xs text-slate-500 mt-1">Manage categories, dishes, prices, and high-res Cloudinary photos for {restaurant?.name}.</p>
           </div>
 
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="foodpanda-btn px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md text-white"
-          >
-            <Plus className="w-4 h-4" /> Add New Dish
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsCategoryModalOpen(true)}
+              className="px-4 py-3 rounded-2xl font-bold text-xs flex items-center gap-2 cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-800 transition"
+            >
+              <Plus className="w-4 h-4 text-slate-600" /> Add Category
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="foodpanda-btn px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md text-white"
+            >
+              <Plus className="w-4 h-4" /> Add New Dish
+            </button>
+          </div>
         </div>
 
-        {/* Menu Categories List */}
+        {/* Categories & Dishes list */}
         {loading ? (
           <div className="space-y-4">
             {[1, 2].map((n) => (
@@ -168,9 +219,18 @@ export default function VendorMenuPage() {
                     <h3 className="text-lg font-black text-slate-900">{category.name}</h3>
                     <p className="text-xs text-slate-400">{category.description || `${category.foodItems?.length || 0} items listed`}</p>
                   </div>
-                  <span className="text-xs font-bold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200">
-                    {category.foodItems?.length || 0} Dishes
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200">
+                      {category.foodItems?.length || 0} Dishes
+                    </span>
+                    <button
+                      onClick={() => handleDeleteCategory(category.id)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                      title="Delete Category"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="divide-y divide-slate-100">
@@ -324,6 +384,60 @@ export default function VendorMenuPage() {
                   className="flex-1 foodpanda-btn py-2.5 rounded-xl text-xs font-bold text-white shadow-md cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? 'Saving...' : 'Create Dish'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add New Category Modal */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl p-6 sm:p-8 space-y-6 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+              <h3 className="text-xl font-black text-slate-900">Add Menu Category</h3>
+              <button onClick={() => setIsCategoryModalOpen(false)} className="text-slate-400 hover:text-slate-700 text-lg">✕</button>
+            </div>
+
+            <form onSubmit={handleCreateCategory} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Category Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Gourmet Burgers, Beverages, Desserts"
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#d70f64]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Description (Optional)</label>
+                <textarea
+                  placeholder="e.g. Delicious freshly grilled patties with brioche buns"
+                  value={newCatDescription}
+                  onChange={(e) => setNewCatDescription(e.target.value)}
+                  rows={2}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#d70f64]"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryModalOpen(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingCat}
+                  className="flex-1 foodpanda-btn py-2.5 rounded-xl text-xs font-bold text-white shadow-md cursor-pointer disabled:opacity-50"
+                >
+                  {submittingCat ? 'Creating...' : 'Create Category'}
                 </button>
               </div>
             </form>
