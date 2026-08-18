@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
+import NotificationCenter from '@/components/NotificationCenter';
 import { ShoppingBag, User, LogOut, LayoutDashboard, Bike, Store, ShieldCheck } from 'lucide-react';
 
 export default function Navbar() {
@@ -53,6 +54,9 @@ export default function Navbar() {
               )}
             </div>
           )}
+
+          {/* Notification Bell */}
+          <NotificationCenter />
 
           {/* Cart Trigger */}
           <button

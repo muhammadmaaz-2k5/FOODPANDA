@@ -49,12 +49,20 @@ export default function AdminDashboard() {
             <p className="text-xs text-purple-200 mt-1">Real-time overview of users, restaurant partners, sales GMV, and commissions.</p>
           </div>
 
-          <a
-            href="/admin/promotions"
-            className="px-5 py-3 rounded-2xl bg-white text-purple-900 font-black text-xs shadow-md hover:bg-purple-50 transition"
-          >
-            🎟️ Campaigns & Coupons
-          </a>
+          <div className="flex gap-2">
+            <a
+              href="/admin/dispatch"
+              className="px-4 py-2.5 rounded-2xl bg-purple-700 hover:bg-purple-600 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5"
+            >
+              🗺️ Live Dispatch Map
+            </a>
+            <a
+              href="/admin/promotions"
+              className="px-4 py-2.5 rounded-2xl bg-white text-purple-900 font-bold text-xs shadow-md hover:bg-purple-50 transition"
+            >
+              🎟️ Campaigns & Coupons
+            </a>
+          </div>
         </div>
 
         {/* Top KPI Cards */}
