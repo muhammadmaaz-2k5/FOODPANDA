@@ -249,11 +249,10 @@ const checkout = async (req, res, next) => {
       }).catch(err => console.error('Coupon count increment error:', err.message));
     }
 
-    // 3. Mark cart as ORDERED
-    await prisma.cart.update({
-      where: { id: cart.id },
-      data: { status: 'ORDERED' },
-    }).catch(err => console.error('Cart update error:', err.message));
+    // 3. Clear customer active cart items
+    await prisma.cartItem.deleteMany({
+      where: { cartId: cart.id },
+    }).catch(err => console.error('Cart clear error:', err.message));
 
     // 4. Update food item & restaurant order counts
     await prisma.restaurant.update({

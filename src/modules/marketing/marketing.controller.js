@@ -33,13 +33,15 @@ const validateCoupon = async (req, res, next) => {
       return errorResponse(res, `Minimum order amount for this coupon is $${coupon.minOrderValue}`, 400);
     }
 
-    // Check user usage limit
-    const userUsageCount = await prisma.couponUsage.count({
-      where: { couponId: coupon.id, userId: req.user.id },
-    });
+    // Check user usage limit if authenticated and restricted
+    if (req.user?.id && coupon.maxUsagePerUser) {
+      const userUsageCount = await prisma.couponUsage.count({
+        where: { couponId: coupon.id, userId: req.user.id },
+      });
 
-    if (userUsageCount >= coupon.maxUsagePerUser) {
-      return errorResponse(res, 'You have reached the maximum usage limit for this coupon', 400);
+      if (userUsageCount >= coupon.maxUsagePerUser) {
+        return errorResponse(res, 'You have reached the maximum usage limit for this coupon', 400);
+      }
     }
 
     let discountAmount = 0;
