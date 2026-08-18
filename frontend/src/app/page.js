@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import CartDrawer from '@/components/CartDrawer';
 import Link from 'next/link';
 import api from '@/lib/api';
-import { Search, Star, Clock, Flame, Tag, ChevronRight, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Search, Star, Clock, Flame, Tag, ChevronRight, SlidersHorizontal, Sparkles, Utensils, Store } from 'lucide-react';
 
 const CUISINES = [
   { label: 'All Cuisines', value: 'ALL', icon: '🍽️' },
@@ -19,46 +19,48 @@ const CUISINES = [
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState('ALL');
-  const [selectedSort, setSelectedSort] = useState('RATING'); // 'RATING', 'FASTEST', 'PRICE'
-  const [restaurants, setRestaurants] = useState([]);
+  const [selectedSort, setSelectedSort] = useState('relevance'); // 'relevance', 'rating', 'fastest', 'price_asc'
+  const [searchResults, setSearchResults] = useState([]);
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadHomeData = async () => {
-      try {
-        const [restRes, bannerRes] = await Promise.all([
-          api.get('/restaurants'),
-          api.get('/marketing/banners'),
-        ]);
+  const fetchSearchResults = async (query = '', cuisine = 'ALL', sort = 'relevance') => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (query.trim()) params.append('q', query.trim());
+      if (cuisine && cuisine !== 'ALL') params.append('category', cuisine);
+      if (sort) params.append('sortBy', sort);
 
-        if (restRes.data.success) setRestaurants(restRes.data.data);
-        if (bannerRes.data.success) setBanners(bannerRes.data.data);
-      } catch (err) {
-        console.error('Home data load error:', err.message);
-      } finally {
-        setLoading(false);
+      const res = await api.get(`/search?${params.toString()}`);
+      if (res.data?.success) {
+        setSearchResults(res.data.data?.items || res.data.data || []);
       }
-    };
+    } catch (err) {
+      console.error('Search API error:', err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadHomeData();
+  useEffect(() => {
+    const loadBanners = async () => {
+      try {
+        const bannerRes = await api.get('/marketing/banners').catch(() => ({ data: { success: true, data: [] } }));
+        if (bannerRes.data?.success) setBanners(bannerRes.data.data || []);
+      } catch (e) {}
+    };
+    loadBanners();
+    fetchSearchResults(searchQuery, selectedCuisine, selectedSort);
   }, []);
 
-  let filteredRestaurants = restaurants.filter((r) => {
-    const matchQuery = r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchCuisine = selectedCuisine === 'ALL' ||
-      r.cuisineType?.toUpperCase().includes(selectedCuisine) ||
-      r.name.toUpperCase().includes(selectedCuisine) ||
-      r.description?.toUpperCase().includes(selectedCuisine);
-    return matchQuery && matchCuisine;
-  });
-
-  if (selectedSort === 'RATING') {
-    filteredRestaurants.sort((a, b) => (b.rating || 4.5) - (a.rating || 4.5));
-  } else if (selectedSort === 'FASTEST') {
-    filteredRestaurants.sort((a, b) => (a.deliveryTimeMin || 25) - (b.deliveryTimeMin || 25));
-  }
+  // Debounced search trigger when typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchSearchResults(searchQuery, selectedCuisine, selectedSort);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedCuisine, selectedSort]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -78,18 +80,21 @@ export default function Home() {
             Super fast delivery from your favorite local eateries and verified restaurant partners.
           </p>
 
-          {/* Search Bar */}
+          {/* Intelligent Search Input */}
           <div className="max-w-2xl mx-auto relative pt-4">
             <div className="flex items-center bg-white rounded-2xl p-2 shadow-2xl">
               <Search className="w-6 h-6 text-slate-400 ml-3 shrink-0" />
               <input
                 type="text"
-                placeholder="Search for restaurants, burgers, pizza, or Asian cuisine..."
+                placeholder="Search for truffle burgers, pizza, drinks, restaurants or dishes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-hidden text-sm sm:text-base"
+                className="w-full px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-hidden text-sm sm:text-base font-medium"
               />
-              <button className="foodpanda-btn px-6 py-3 rounded-xl font-bold text-xs sm:text-sm shrink-0">
+              <button
+                onClick={() => fetchSearchResults(searchQuery, selectedCuisine, selectedSort)}
+                className="foodpanda-btn px-6 py-3 rounded-xl font-bold text-xs sm:text-sm shrink-0 cursor-pointer"
+              >
                 Find Food
               </button>
             </div>
@@ -149,95 +154,125 @@ export default function Home() {
         </section>
       )}
 
-      {/* Restaurant List Section */}
+      {/* Search Engine Results Grid */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 w-full space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Featured Restaurants</h2>
-            <p className="text-xs text-slate-500 mt-1">Handpicked quality dining delivering directly to your door.</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              {searchQuery ? `Search Results for "${searchQuery}"` : 'Top Rated Restaurants & Dishes'}
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Found {searchResults.length} matching partner restaurants and chef specialties.
+            </p>
           </div>
 
-          {/* Sort Filter Selector */}
+          {/* Search Sort by Engine */}
           <div className="flex items-center gap-2 text-xs font-bold bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs">
             <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
             <span className="text-slate-500">Sort by:</span>
             <button
-              onClick={() => setSelectedSort('RATING')}
-              className={`px-2 py-1 rounded-lg ${selectedSort === 'RATING' ? 'bg-[#d70f64] text-white' : 'text-slate-700'}`}
+              onClick={() => setSelectedSort('relevance')}
+              className={`px-2 py-1 rounded-lg transition ${selectedSort === 'relevance' ? 'bg-[#d70f64] text-white' : 'text-slate-700'}`}
+            >
+              Relevance
+            </button>
+            <button
+              onClick={() => setSelectedSort('rating')}
+              className={`px-2 py-1 rounded-lg transition ${selectedSort === 'rating' ? 'bg-[#d70f64] text-white' : 'text-slate-700'}`}
             >
               Top Rated
             </button>
             <button
-              onClick={() => setSelectedSort('FASTEST')}
-              className={`px-2 py-1 rounded-lg ${selectedSort === 'FASTEST' ? 'bg-[#d70f64] text-white' : 'text-slate-700'}`}
+              onClick={() => setSelectedSort('fastest')}
+              className={`px-2 py-1 rounded-lg transition ${selectedSort === 'fastest' ? 'bg-[#d70f64] text-white' : 'text-slate-700'}`}
             >
               Fastest
+            </button>
+            <button
+              onClick={() => setSelectedSort('price_asc')}
+              className={`px-2 py-1 rounded-lg transition ${selectedSort === 'price_asc' ? 'bg-[#d70f64] text-white' : 'text-slate-700'}`}
+            >
+              Lowest Price
             </button>
           </div>
         </div>
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((n) => (
+            {[1, 2, 3, 4, 5, 6].map((n) => (
               <div key={n} className="h-72 rounded-3xl bg-slate-200 animate-pulse" />
             ))}
           </div>
-        ) : filteredRestaurants.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-3xl border border-slate-200">
-            <p className="text-lg font-bold text-slate-700">No restaurants found</p>
-            <p className="text-xs text-slate-400 mt-1">Try clearing your filters or search keywords.</p>
+        ) : searchResults.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 space-y-2">
+            <p className="text-4xl">🔍</p>
+            <p className="text-lg font-black text-slate-800">No matching food or restaurants found</p>
+            <p className="text-xs text-slate-400">Try searching for other dish names, burger specials, or cuisines.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRestaurants.map((res) => (
-              <Link
-                key={res.id}
-                href={`/restaurant/${res.id}`}
-                className="group bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col"
-              >
-                {/* Restaurant Cover Image */}
-                <div className="h-48 w-full bg-slate-100 relative overflow-hidden">
-                  {res.coverImage ? (
-                    <img
-                      src={res.coverImage}
-                      alt={res.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-rose-50 text-[#d70f64] text-5xl">
-                      🍔
+            {searchResults.map((item) => {
+              const isRestaurant = item.type === 'RESTAURANT';
+              return (
+                <Link
+                  key={item.id}
+                  href={item.targetUrl || `/restaurant/${item.id}`}
+                  className="group bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col"
+                >
+                  {/* Card Media Preview */}
+                  <div className="h-48 w-full bg-slate-100 relative overflow-hidden">
+                    {item.coverUrl || item.logoUrl || item.image ? (
+                      <img
+                        src={item.coverUrl || item.logoUrl || item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-rose-50 text-[#d70f64] text-5xl">
+                        {isRestaurant ? '🍔' : '🍕'}
+                      </div>
+                    )}
+                    
+                    <div className="absolute top-3 left-3 bg-slate-900/85 backdrop-blur-md text-white px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                      {isRestaurant ? <Store className="w-3 h-3 text-[#d70f64]" /> : <Utensils className="w-3 h-3 text-amber-400" />}
+                      <span>{isRestaurant ? 'Restaurant' : 'Menu Dish'}</span>
                     </div>
-                  )}
-                  <div className="absolute top-3 right-3 bg-white/95 backdrop-blur px-2.5 py-1 rounded-full text-xs font-bold text-slate-800 flex items-center gap-1 shadow-xs">
-                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                    <span>{res.rating || 4.8}</span>
-                    <span className="text-slate-400 text-[10px]">({res.ratingCount || 120})</span>
-                  </div>
-                </div>
 
-                {/* Info Content */}
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
-                  <div>
-                    <h3 className="text-lg font-black text-slate-900 group-hover:text-[#d70f64] transition">
-                      {res.name}
-                    </h3>
-                    <p className="text-xs text-slate-500 line-clamp-2 mt-1">
-                      {res.description || 'Gourmet burgers, crispy fries & signature shakes'}
-                    </p>
+                    <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-slate-800 flex items-center gap-1 shadow-xs">
+                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                      <span>{item.rating || 4.8}</span>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs font-semibold text-slate-600 pt-3 border-t border-slate-100">
-                    <div className="flex items-center gap-1 text-slate-700">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{res.deliveryTimeMin || 25}-{res.deliveryTimeMax || 35} mins</span>
+                  {/* Card Content */}
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                    <div>
+                      <h3 className="text-lg font-black text-slate-900 group-hover:text-[#d70f64] transition flex items-center justify-between">
+                        <span className="line-clamp-1">{item.name}</span>
+                        {item.price && (
+                          <span className="text-sm font-extrabold text-[#d70f64] shrink-0 ml-2">
+                            ${item.price.toFixed(2)}
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-xs text-slate-500 line-clamp-2 mt-1">
+                        {item.description || (isRestaurant ? 'Handcrafted delicious recipes & meals' : `Offered at ${item.restaurant?.name || 'Partner Kitchen'}`)}
+                      </p>
                     </div>
-                    <span className="text-[#d70f64] font-bold flex items-center gap-0.5 group-hover:translate-x-0.5 transition">
-                      View Menu <ChevronRight className="w-3.5 h-3.5" />
-                    </span>
+
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-600 pt-3 border-t border-slate-100">
+                      <div className="flex items-center gap-1 text-slate-700">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{item.deliveryTimeMin || item.restaurant?.deliveryTimeMin || 20}-{item.deliveryTimeMax || item.restaurant?.deliveryTimeMax || 35} mins</span>
+                      </div>
+                      <span className="text-[#d70f64] font-bold flex items-center gap-0.5 group-hover:translate-x-0.5 transition">
+                        {isRestaurant ? 'View Restaurant' : 'Order Dish'} <ChevronRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </main>
