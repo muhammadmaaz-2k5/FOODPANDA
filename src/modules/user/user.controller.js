@@ -246,15 +246,26 @@ const listUsers = async (req, res, next) => {
 const updateUserStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    let { status } = req.body;
 
-    if (!['ACTIVE', 'BANNED', 'PENDING'].includes(status)) {
-      return errorResponse(res, 'Invalid status value', 400);
+    if (!status) return errorResponse(res, 'Status is required', 400);
+    const upperStatus = status.toUpperCase();
+
+    // Map SUSPENDED to BANNED if needed to match UserStatus Prisma enum
+    let normalizedStatus;
+    if (upperStatus === 'SUSPENDED' || upperStatus === 'BANNED') {
+      normalizedStatus = 'BANNED';
+    } else if (upperStatus === 'ACTIVE') {
+      normalizedStatus = 'ACTIVE';
+    } else if (upperStatus === 'PENDING') {
+      normalizedStatus = 'PENDING';
+    } else {
+      return errorResponse(res, 'Invalid status value. Valid statuses are ACTIVE, BANNED, SUSPENDED, PENDING', 400);
     }
 
     const updated = await prisma.user.update({
       where: { id },
-      data: { status },
+      data: { status: normalizedStatus },
       select: { id: true, email: true, status: true },
     });
 

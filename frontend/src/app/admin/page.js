@@ -43,14 +43,20 @@ export default function AdminDashboard() {
   const fetchAdminData = async () => {
     try {
       const [analyticsRes, restRes, usersRes] = await Promise.all([
-        api.get('/analytics/dashboard'),
-        api.get('/restaurants'),
+        api.get('/analytics/dashboard').catch(() => ({ data: { success: true, data: null } })),
+        api.get('/restaurants?status=ALL').catch(() => ({ data: { success: true, data: [] } })),
         api.get('/users').catch(() => ({ data: { success: true, data: [] } })),
       ]);
 
-      if (analyticsRes.data.success) setStats(analyticsRes.data.data);
-      if (restRes.data.success) setRestaurants(restRes.data.data);
-      if (usersRes.data.success) setUsersList(usersRes.data.data || []);
+      if (analyticsRes.data?.success) setStats(analyticsRes.data.data);
+      if (restRes.data?.success) {
+        const restList = restRes.data.data?.items || restRes.data.data || [];
+        setRestaurants(restList);
+      }
+      if (usersRes.data?.success) {
+        const uList = usersRes.data.data?.items || usersRes.data.data || [];
+        setUsersList(uList);
+      }
     } catch (err) {
       console.error('Admin data error:', err.message);
     } finally {
