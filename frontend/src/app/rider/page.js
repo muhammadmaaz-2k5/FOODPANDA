@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Navbar from '@/components/Navbar';
+import DashboardLayout from '@/components/DashboardLayout';
 import { useAuth } from '@/context/AuthContext';
 import { useSocket } from '@/context/SocketContext';
 import api from '@/lib/api';
@@ -176,10 +176,8 @@ export default function RiderDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Navbar />
-
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-1 space-y-6">
+    <DashboardLayout role="RIDER" title="Rider Delivery Logistics">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Status Bar */}
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
@@ -430,7 +428,6 @@ export default function RiderDashboard() {
             </div>
           </div>
         )}
-      </main>
 
       {/* Cash on Delivery Confirmation Modal */}
       {showCodModal && activeJob && (
@@ -466,6 +463,7 @@ export default function RiderDashboard() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

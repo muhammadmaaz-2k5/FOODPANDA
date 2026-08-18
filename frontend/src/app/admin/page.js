@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
+import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
@@ -96,10 +96,8 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Navbar />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-1 space-y-8">
+    <DashboardLayout role="ADMIN" title="Platform Executive Governance">
+      <div className="space-y-8">
         
         {/* Header */}
         <div className="bg-purple-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -311,7 +309,6 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
-      </main>
 
       {/* Restaurant Governance Modal */}
       {selectedRestForEdit && (
@@ -363,6 +360,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

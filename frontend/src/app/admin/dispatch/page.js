@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Navbar from '@/components/Navbar';
+import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -79,32 +79,27 @@ export default function AdminDispatchPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col">
-      <Navbar />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1 space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-800/80 p-6 rounded-3xl border border-slate-700 shadow-xl">
+    <DashboardLayout role="ADMIN" title="Citywide Fleet Dispatch Map">
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-xl">
           <div>
-            <Link href="/admin" className="inline-flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-white mb-2">
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Admin Overview
-            </Link>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Live Fleet Dispatch Map</h1>
+            <h2 className="text-xl font-black tracking-tight">Live Fleet Dispatch Map</h2>
             <p className="text-xs text-slate-400 mt-1">Real-time citywide visualization of active riders, pending orders, and route paths.</p>
           </div>
 
           <button
             onClick={fetchDispatchData}
-            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md"
+            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md text-white"
           >
             <RefreshCw className="w-3.5 h-3.5" /> Refresh Fleet
           </button>
         </div>
 
         {/* Dispatch Map Container */}
-        <div className="w-full h-[540px] rounded-3xl overflow-hidden border border-slate-800 shadow-2xl relative">
+        <div className="w-full h-[540px] rounded-3xl overflow-hidden border border-slate-300 shadow-2xl relative">
           <div ref={mapContainer} className="w-full h-full" />
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
+import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useSocket } from '@/context/SocketContext';
@@ -102,10 +102,8 @@ export default function VendorDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
-      <Navbar />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1 space-y-6">
+    <DashboardLayout role="VENDOR" title="Kitchen Display System (KDS)">
+      <div className="space-y-6">
         
         {/* Top Operational Bar */}
         <div className="bg-slate-800/90 border border-slate-700/80 p-6 rounded-3xl shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -284,7 +282,6 @@ export default function VendorDashboard() {
             })
           )}
         </div>
-      </main>
 
       {/* Printable Kitchen Slip Modal */}
       {selectedTicketForPrint && (
@@ -330,6 +327,7 @@ export default function VendorDashboard() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

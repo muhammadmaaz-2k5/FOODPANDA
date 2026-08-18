@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
+import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { ShoppingBag, Star, Clock, ChevronRight, RotateCcw, MapPin, Heart, Plus, Trash2 } from 'lucide-react';
@@ -110,10 +110,8 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Navbar />
-
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-1 space-y-8">
+    <DashboardLayout role="CUSTOMER" title="My Orders & Profile Hub">
+      <div className="max-w-5xl mx-auto space-y-8">
         {/* Navigation Profile Tabs */}
         <div className="flex justify-between items-center bg-white p-4 rounded-3xl border border-slate-200 shadow-xs">
           <div className="flex gap-2 text-xs font-bold">
@@ -263,7 +261,6 @@ export default function OrdersPage() {
             </div>
           </div>
         )}
-      </main>
 
       {/* Review & Star Rating Modal */}
       {selectedOrderForReview && (
@@ -381,6 +378,7 @@ export default function OrdersPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

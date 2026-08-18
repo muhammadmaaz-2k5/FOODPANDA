@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
+import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { Store, Plus, Edit2, Trash2, Image as ImageIcon, Check, Eye, EyeOff, UploadCloud, ArrowLeft } from 'lucide-react';
@@ -119,17 +119,12 @@ export default function VendorMenuPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Navbar />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-1 space-y-8">
+    <DashboardLayout role="VENDOR" title="Menu & Dish Builder">
+      <div className="space-y-8">
         {/* Navigation & Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
           <div>
-            <Link href="/vendor" className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-800 mb-2">
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Kitchen Tickets
-            </Link>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900">Menu & Dish Builder</h1>
+            <h2 className="text-xl font-black text-slate-900">Menu & Dish Customizer</h2>
             <p className="text-xs text-slate-500 mt-1">Manage categories, dishes, prices, and high-res Cloudinary photos for {restaurant?.name}.</p>
           </div>
 
@@ -209,7 +204,6 @@ export default function VendorMenuPage() {
             ))}
           </div>
         )}
-      </main>
 
       {/* Add New Dish Modal */}
       {isModalOpen && (
@@ -320,6 +314,7 @@ export default function VendorMenuPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

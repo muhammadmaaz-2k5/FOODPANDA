@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
+import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { Store, Clock, MapPin, DollarSign, Save, ArrowLeft, CheckCircle2 } from 'lucide-react';
@@ -58,16 +58,11 @@ export default function VendorSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Navbar />
-
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-1 space-y-8">
+    <DashboardLayout role="VENDOR" title="Kitchen Hours & Operational Settings">
+      <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
           <div>
-            <Link href="/vendor" className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-800 mb-2">
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Kitchen Portal
-            </Link>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900">Restaurant Settings & Hours</h1>
+            <h2 className="text-xl font-black text-slate-900">Restaurant Settings & Hours</h2>
             <p className="text-xs text-slate-500 mt-1">Configure kitchen operating state, prep benchmarks, and delivery minimums.</p>
           </div>
 
@@ -147,7 +142,7 @@ export default function VendorSettingsPage() {
             </div>
           </div>
         </form>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
