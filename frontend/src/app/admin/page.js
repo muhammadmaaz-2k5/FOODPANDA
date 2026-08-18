@@ -48,6 +48,13 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-black tracking-tight">Executive Admin Portal</h1>
             <p className="text-xs text-purple-200 mt-1">Real-time overview of users, restaurant partners, sales GMV, and commissions.</p>
           </div>
+
+          <a
+            href="/admin/promotions"
+            className="px-5 py-3 rounded-2xl bg-white text-purple-900 font-black text-xs shadow-md hover:bg-purple-50 transition"
+          >
+            🎟️ Campaigns & Coupons
+          </a>
         </div>
 
         {/* Top KPI Cards */}
